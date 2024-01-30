@@ -1,0 +1,195 @@
+
+// 각 API에 대한 구분방법
+  // 1. 명시하지 않음 => #1, #2 등의 넘버링으로 기록됨
+  // 2. ### 이름 => ### 뒤에 붙은 이름으로 테스트가 작동
+  // (optional) # @name 이름 => #는 메타태그같은 느낌. @name이 ### 이름을 덮어 씀. @name뒤에 붙은 이름으로 테스트가 작동
+
+// Accept header / Content-Type / Authorization 헤더는 아래에 직접 명시해야됨
+// 테스트코드는 js or 파일로 작성할 수 있음(여러개 파일을 연속으로 검증하는 것은 안됨. 한 파일에 다 작성해야 함 -> 아쉬움)
+// @no-log, @no-redirect, @no-cookie-jar
+
+### 첫번째 테스트 (모든 테스트에 앞서 변수 clear)
+< {%
+    client.global.clearAll()
+%}
+GET {{server}}
+
+> {%
+    client.test("Request executed successfully", () => {
+        const validateExpression = !!response.status.toString().match(/20\d/)
+        client.assert(validateExpression, "Response status is not 2xx")
+    })
+%}
+
+### 랜덤값 테스트
+# @no-log
+GET {{server}}/random?id={{$random.uuid}}&email={{$random.email}}&ts={{$timestamp}}
+
+> {%
+    client.test("Response data has id/email/ts schema", () => {
+        const data = response.body
+        client.assert(
+            data.hasOwnProperty('id') &&
+            data.hasOwnProperty('email') &&
+            data.hasOwnProperty('ts'),
+            "Test Failed"
+        )
+    })
+%}
+
+### 경로변수 테스트(간단하게 쓸 수 있는 @변수)
+# @name pathVariable
+# @no-log
+@name=boki
+@age=20
+GET {{server}}/{{name}}/{{age}}
+
+> script/2xx.js
+
+### 파라미터 테스트
+# @no-log
+GET {{server}}/param?name={{name}}&age={{age}}
+
+> {%
+    console.log('<응답 결과는 Response Handler 탭에서 볼 수 있다>', response.body)
+%}
+
+### Forward
+GET {{server}}/forward
+
+> {%
+    console.log('111', response.body)
+    client.test('Forward executed successfully', () => {
+        console.log(response.body)
+    })
+%}
+
+### Redirect
+// redirect는 302 -> 200으로 넘김
+GET {{server}}/redirect
+
+> script/2xx.js
+
+### Redirect2
+// redirect는 302 -> 200으로 넘김
+# @no-redirect // 이 옵션으로 리다이렉트를 막을 수 있음
+GET {{server}}/redirect
+
+> {%
+    client.test('Request executed successfully', () => {
+        const validateExpression = !!response.status.toString().match(/302/)
+        client.assert(validateExpression, 'Response status is not 302')
+    })
+%}
+
+### 쿠키 생성
+# @name cookie-set
+GET {{server}}/cookie-set
+
+> {%
+    const cookies = response.headers.valueOf('Set-Cookie').split(';').map(cookie => cookie.trim())
+
+    const cookiesMap = cookies.reduce((acc, cookie) => {
+        const [key, value] = cookie.split('=').map(part => part.trim())
+        acc[key] = value
+        return acc
+    }, {})
+
+    console.log(cookiesMap)
+
+    client.test('custom cookie created', () => {
+        const validateExpression = !!cookiesMap['boki'] == true
+        client.assert(validateExpression, 'Cookie created')
+    })
+%}
+
+### 쿠키 확인
+# @name cookie-get
+GET {{server}}/cookie-get
+Cookie: theme=darcula; last_searched_location=IJburg
+
+> {%
+    client.test('cookies exists >= 3', () => {
+        const cookies = response.body
+        const validateExpression = cookies.length >= 3
+        client.assert(validateExpression, 'Cookies exists >= 3')
+    })
+
+    client.test('custom cookie checked', () => {
+        const cookie = response.body.filter(it => it.name === 'boki')
+        const validateExpression = cookie[0].value === 'strong'
+        client.assert(validateExpression, 'Cookie exists')
+    })
+%}
+
+### 쿠키 확인 (쿠키를 요청에 추가하지 않음, 단 아래 명시해준 쿠키는 제외)
+# @name cookie-get
+# @no-cookie-jar
+GET {{server}}/cookie-get
+Cookie: theme=darcula; last_searched_location=IJburg
+
+> {%
+    client.test('cookies exists >= 2', () => {
+        const cookies = response.body
+        const validateExpression = cookies.length >= 2
+        client.assert(validateExpression, 'Cookies exists >= 2')
+    })
+
+    client.test('custom cookie checked', () => {
+        const cookie = response.body.filter(it => it.name === 'boki')[0]
+        const validateExpression = cookie == null
+        client.assert(validateExpression, 'Cookie not exist')
+    })
+%}
+
+### Post
+// 환경변수와 함께 Body값으로 요청
+< {%
+    client.global.set('boki_age', 18)
+%}
+POST {{server}}
+Content-Type: application/json
+
+{
+  "name": "hell Boki",
+  "age": {{ boki_age }}
+}
+
+### Login
+POST {{server}}/login
+Accept: application/json
+Content-Type: application/json
+
+{
+  "email": "admin@boki.com",
+  "password": "1234"
+}
+
+> {%
+    if (response.status.valueOf() === 200) {
+        client.global.set('token', response.body.token)
+    }
+%}
+
+### Get Current UserInfo from JWT - Fail
+GET {{server}}/me
+Accept: application/json
+
+> {%
+    client.test('me failed', () => {
+        const validateExpression = response.status.valueOf() === 401
+        client.assert(validateExpression)
+    })
+%}
+
+### Get Current UserInfo from JWT - Success
+GET {{server}}/me
+Accept: application/json
+Authorization: Bearer {{ token }}
+
+> {%
+    client.test('me success', () => {
+        const validateExpression = response.status.valueOf() === 200
+        client.assert(validateExpression)
+    })
+%}
