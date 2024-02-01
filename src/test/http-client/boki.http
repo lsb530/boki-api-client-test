@@ -55,6 +55,7 @@ GET {{server}}/param?name={{name}}&age={{age}}
 %}
 
 ### Forward
+# @no-log
 GET {{server}}/forward
 
 > {%
@@ -65,12 +66,14 @@ GET {{server}}/forward
 %}
 
 ### Redirect
+# @no-log
 // redirect는 302 -> 200으로 넘김
 GET {{server}}/redirect
 
 > script/2xx.js
 
 ### Redirect2
+# @no-log
 // redirect는 302 -> 200으로 넘김
 # @no-redirect // 이 옵션으로 리다이렉트를 막을 수 있음
 GET {{server}}/redirect
@@ -84,6 +87,7 @@ GET {{server}}/redirect
 
 ### 쿠키 생성
 # @name cookie-set
+# @no-log
 GET {{server}}/cookie-set
 
 > {%
@@ -105,6 +109,7 @@ GET {{server}}/cookie-set
 
 ### 쿠키 확인
 # @name cookie-get1
+# @no-log
 GET {{server}}/cookie-get
 Cookie: theme=darcula; last_searched_location=IJburg
 
@@ -124,6 +129,7 @@ Cookie: theme=darcula; last_searched_location=IJburg
 
 ### 쿠키 확인 (쿠키를 요청에 추가하지 않음, 단 아래 명시해준 쿠키는 제외)
 # @name cookie-get2
+# @no-log
 # @no-cookie-jar
 GET {{server}}/cookie-get
 Cookie: theme=darcula; last_searched_location=IJburg
@@ -137,6 +143,7 @@ Cookie: theme=darcula; last_searched_location=IJburg
 %}
 
 ### Post
+# @no-log
 // 환경변수와 함께 Body값으로 요청
 < {%
     client.global.set('boki_age', 18)
@@ -151,6 +158,7 @@ Content-Type: application/json
 
 ### Login
 POST {{server}}/login
+# @no-log
 Accept: application/json
 Content-Type: application/json
 
@@ -166,6 +174,7 @@ Content-Type: application/json
 %}
 
 ### Get Current UserInfo from JWT - Fail
+# @no-log
 GET {{server}}/me
 Accept: application/json
 
@@ -177,6 +186,7 @@ Accept: application/json
 %}
 
 ### Get Current UserInfo from JWT - Success
+# @no-log
 GET {{server}}/me
 Accept: application/json
 Authorization: Bearer {{ token }}
