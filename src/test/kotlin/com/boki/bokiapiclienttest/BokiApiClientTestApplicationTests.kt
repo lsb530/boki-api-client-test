@@ -1,5 +1,7 @@
 package com.boki.bokiapiclienttest
 
+import com.boki.bokiapiclienttest.dto.LoginRequest
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
@@ -9,13 +11,16 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.util.*
-import java.util.function.Consumer
 
 @AutoConfigureWebTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class BokiApiClientTestApplicationTests {
+
     @Autowired
     lateinit var webTestClient: WebTestClient
+
+    @Autowired
+    lateinit var objectMapper: ObjectMapper
 
     final val API_PATH = "/api"
 
@@ -56,6 +61,28 @@ class BokiApiClientTestApplicationTests {
             .jsonPath("$.ts").isNumber
     }
 
+    @DisplayName("/login")
+    @Order(3)
+    @Test
+    fun login() {
+        val loginRequest = LoginRequest(email = "admin@boki.com", password = "1234")
 
+        webTestClient.post()
+            .uri("$API_PATH/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(loginRequest)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.token").exists()
+            .consumeWith { response ->
+                response.responseBody?.let {
+                    val body = String(it)
+                    val jsonNode = objectMapper.readTree(body)
+                    val token = jsonNode.get("token").asText()
+                    println("Token: $token")
+                }
+            }
+    }
 
 }

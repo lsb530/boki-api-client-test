@@ -1,12 +1,12 @@
 package com.boki.bokiapiclienttest.controller
 
+import com.boki.bokiapiclienttest.dto.LoginRequest
 import com.boki.bokiapiclienttest.util.JWTUtil
 import com.boki.bokiapiclienttest.dto.UserInfo
 import com.boki.bokiapiclienttest.dto.toUserInfo
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.apache.coyote.http11.Constants.a
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -14,11 +14,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.view.RedirectView
 import java.util.*
-
-data class LoginRequest(
-    val email: String?,
-    val password: String?
-)
 
 @RequestMapping("/api")
 @RestController
