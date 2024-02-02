@@ -37,5 +37,5 @@ jobs:
           files: |-
             ./src/test/http-client/boki.http
           env_file: ./src/test/http-client/http-client.env.json
-          env: docker
+          env: network
           insecure: true
