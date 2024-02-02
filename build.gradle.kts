@@ -29,6 +29,7 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-impl:${jwtLibVersion}")
     implementation("io.jsonwebtoken:jjwt-jackson:${jwtLibVersion}")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-webflux")
 }
 
 tasks.withType<KotlinCompile> {
@@ -39,5 +40,6 @@ tasks.withType<KotlinCompile> {
 }
 
 tasks.withType<Test> {
+    jvmArgs("-XX:+EnableDynamicAgentLoading")
     useJUnitPlatform()
 }
