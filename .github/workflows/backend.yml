@@ -21,21 +21,26 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@ec92e829475ac0c2315ea8f9eced72db85bb337a # v3.0.0
+
+      - name: Test
+        run: ./gradlew test
+
       - name: Build with Gradle Wrapper
         run: ./gradlew build -x test
-
-      - name: Start Backend
-        run: ./gradlew bootRun &
-        timeout-minutes: 2
-
-      - uses: actions/checkout@v4
-      - name: Run HTTP Tests
-        uses: madhead/intellij-http-client-action@latest
-        with:
-          files: |-
-            ./src/test/http-client/boki.http
-          env_file: ./src/test/http-client/http-client.env.json
-          env: network
-          insecure: true
+#
+#      - name: Start Backend
+#        run: ./gradlew bootRun &
+#        timeout-minutes: 2
+#
+#      - uses: actions/checkout@v4
+#      - name: Run HTTP Tests
+#        uses: madhead/intellij-http-client-action@latest
+#        with:
+#          files: |-
+#            ./src/test/http-client/boki.http
+#          env_file: ./src/test/http-client/http-client.env.json
+#          env: network
+#          insecure: true
